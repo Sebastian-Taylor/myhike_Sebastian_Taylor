@@ -91,13 +91,16 @@ writeHikes();         //if you used method 1
 function displayCardsDynamically(collection) {
     let cardTemplate = document.getElementById("hikeCardTemplate");
 
-    db.collection(collection).get()   //the collection called "hikes"
+    db.collection(collection)
+        .orderBy("hike_time")  //sort by name
+        .limit(2)              //limit to 2 records
+        .get()   //the collection called "hikes"
         .then(allHikes=> {
             //var i = 1;  //Optional: if you want to have a unique ID for each hike
             allHikes.forEach(doc => { //iterate thru each doc
                 var title = doc.data().name;       // get value of the "name" key
                 var details = doc.data().details;  // get value of the "details" key
-								var hikeCode = doc.data().code;    //get unique ID to each hike to be used for fetching right image
+				var hikeCode = doc.data().code;    //get unique ID to each hike to be used for fetching right image
                 var hikeLength = doc.data().length; //gets the length field
                 var docID = doc.id;
                 let newcard = cardTemplate.content.cloneNode(true);
@@ -108,10 +111,13 @@ function displayCardsDynamically(collection) {
                 newcard.querySelector('.card-text').innerHTML = details;
                 newcard.querySelector('.card-image').src = `./images/${hikeCode}.jpg`; //Example: NV01.jpg
                 newcard.querySelector('.card-length').innerHTML =
-                    "Length: " + doc.data().length + " km <br>" +
+                newcard.querySelector('a').href = "eachHike.html?docID="+docID;
+
+                newcard.querySelector('.card-length').innerHTML =
+                    "Length: " + hikeLength + " km <br>" +
                     "Duration: " + doc.data().hike_time + "min <br>" +
                     "Last updated: " + doc.data().last_updated.toDate().toLocaleDateString();
-                newcard.querySelector('a').href = "eachHike.html?docID="+docID;
+                    
                 newcard.querySelector('i').id = 'save-' + docID;   //guaranteed to be unique
                 newcard.querySelector('i').onclick = () => saveBookmark(docID);
 
@@ -119,7 +125,13 @@ function displayCardsDynamically(collection) {
                 // newcard.querySelector('.card-title').setAttribute("id", "ctitle" + i);
                 // newcard.querySelector('.card-text').setAttribute("id", "ctext" + i);
                 // newcard.querySelector('.card-image').setAttribute("id", "cimage" + i);
-
+                currentUser.get().then(userDoc => {
+                    //get the user name
+                    var bookmarks = userDoc.data().bookmarks;
+                    if (bookmarks.includes(docID)) {
+                        document.getElementById('save-' + docID).innerText = 'bookmark';
+                    }
+                })
                 //attach to gallery, Example: "hikes-go-here"
                 document.getElementById(collection + "-go-here").appendChild(newcard);
 
