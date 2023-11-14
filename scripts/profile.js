@@ -62,6 +62,6 @@ function saveUserInfo() {
     });
 
     document.getElementById('personalInfoFields').disabled = true;
- }
- 
+}
+
 }
